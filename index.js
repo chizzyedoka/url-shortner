@@ -1,5 +1,5 @@
 import express from 'express';
-
+import {authenticationMiddleware} from './middlewares/authentication.middleware.js';
 import { userRouter } from './routes/user.routes.js';
 
 const app = express();
@@ -11,6 +11,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
   return res.json({ message: 'Server is up and running....' });
 });
+
+app.use(authenticationMiddleware);
 
 app.use('/api/users', userRouter);
 
