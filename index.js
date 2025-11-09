@@ -15,8 +15,6 @@ app.get('/', (req, res) => {
 
 
 app.use('/api/users', userRouter);
-
-app.use(authenticationMiddleware);
 app.use('/api/urls', urlRouter);
 
 app.listen(PORT, () => {

@@ -1,11 +1,11 @@
 import express from 'express';
 import { urlSchema } from '../validation/request.validation.js';
-import { createShortUrl, getUserUrls } from '../services/url.service.js';
-import { requireUserId } from '../middlewares/auth.middleware.js';
+import { createShortUrl, getUserUrls, getUrlByShortCode } from '../services/url.service.js';
+import { authenticationMiddleware, requireUserId } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/shorten', requireUserId, async (req, res) => {
+router.post('/shorten', authenticationMiddleware, requireUserId, async (req, res) => {
     const userId = req.user.id;
 
     try {
@@ -30,7 +30,7 @@ router.post('/shorten', requireUserId, async (req, res) => {
 });
 
 // get all urls for a user
-router.get('/', requireUserId, async (req, res) => {
+router.get('/', authenticationMiddleware, requireUserId, async (req, res) => {
     const userId = req.user.id;
 
     try {
@@ -38,6 +38,22 @@ router.get('/', requireUserId, async (req, res) => {
         return res.status(200).json({ data: userUrls });
     } catch (error) {
         console.error('Error fetching user URLs:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// redirect to original URL (public route - no authentication)
+router.get('/:shortCode', async (req, res) => {
+    const { shortCode } = req.params;
+
+    try {
+        const url = await getUrlByShortCode(shortCode);
+        if (!url) {
+            return res.status(404).json({ error: 'URL not found' });
+        }
+        return res.redirect(url.originalUrl);
+    } catch (error) {
+        console.error('Error redirecting to original URL:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 });

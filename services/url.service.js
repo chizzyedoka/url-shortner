@@ -22,3 +22,13 @@ export const getUserUrls = async (userId) => {
     const userUrls = await db.select().from(urlsTable).where(eq(urlsTable.userId, userId));
     return userUrls;
 };
+
+/**
+ * Get URL by short code
+ * @param {string} shortCode - The short code to lookup
+ * @returns {Object|null} URL object or null if not found
+ */
+export const getUrlByShortCode = async (shortCode) => {
+    const [url] = await db.select().from(urlsTable).where(eq(urlsTable.shortCode, shortCode));
+    return url;
+};

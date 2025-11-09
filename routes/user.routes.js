@@ -46,11 +46,11 @@ router.post('/login', async (req, res) => {
         console.log(email)
         const user = await loginUser({ email, password });
         console.log("user logged in successfully")
-        console.log("User object:", user); // Debug: Check user object
+        console.log("User object:", user); 
         
         // Generate JWT token with user id and email
         const token = generateToken({ id: user.id, email: user.email });
-        console.log("Token generated:", token); // Debug: Check token
+        console.log("Token generated:", token); 
         
         return res.status(200).json({ 
             message: 'Login successful', 
@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
             } 
         });
     } catch (error) {
-        console.error("Login error:", error); // Debug: Log the actual error
+        console.error("Login error:", error); 
         if (error.message.includes('Invalid email or password')) {
             return res.status(400).json({ error: error.message });
         }
