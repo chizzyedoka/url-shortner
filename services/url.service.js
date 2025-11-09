@@ -32,3 +32,26 @@ export const getUrlByShortCode = async (shortCode) => {
     const [url] = await db.select().from(urlsTable).where(eq(urlsTable.shortCode, shortCode));
     return url;
 };
+
+
+export const deleteUrlByShortCode = async (shortCode, userId) => {
+    // First check if the URL exists and belongs to the user
+    const [url] = await db.select().from(urlsTable)
+        .where(eq(urlsTable.shortCode, shortCode));
+    
+    if (!url) {
+        return null;
+    }
+    
+    // Check if the URL belongs to the user
+    if (url.userId !== userId) {
+        throw new Error('Unauthorized to delete this URL');
+    }
+    
+    // Delete the URL
+    const [deletedUrl] = await db.delete(urlsTable)
+        .where(eq(urlsTable.shortCode, shortCode))
+        .returning({ shortCode: urlsTable.shortCode });
+    
+    return deletedUrl;
+};

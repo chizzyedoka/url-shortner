@@ -1,6 +1,6 @@
 import express from 'express';
 import { urlSchema } from '../validation/request.validation.js';
-import { createShortUrl, getUserUrls, getUrlByShortCode } from '../services/url.service.js';
+import { createShortUrl, getUserUrls, getUrlByShortCode, deleteUrlByShortCode } from '../services/url.service.js';
 import { authenticationMiddleware, requireUserId } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
@@ -54,6 +54,31 @@ router.get('/:shortCode', async (req, res) => {
         return res.redirect(url.originalUrl);
     } catch (error) {
         console.error('Error redirecting to original URL:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// delete URL by short code (authenticated route)
+router.delete('/:shortCode', authenticationMiddleware, requireUserId, async (req, res) => {
+    const { shortCode } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const deletedUrl = await deleteUrlByShortCode(shortCode, userId);
+        
+        if (!deletedUrl) {
+            return res.status(404).json({ error: 'URL not found' });
+        }
+        
+        return res.status(200).json({ 
+            message: 'URL deleted successfully', 
+            data: { shortCode: deletedUrl.shortCode } 
+        });
+    } catch (error) {
+        if (error.message === 'Unauthorized to delete this URL') {
+            return res.status(403).json({ error: error.message });
+        }
+        console.error('Error deleting URL:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 });
