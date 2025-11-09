@@ -1,6 +1,6 @@
 import { verifyToken } from '../utils/jwt.js';
 
-function authenticationMiddleware(req, res, next) {
+export function authenticationMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -15,4 +15,13 @@ function authenticationMiddleware(req, res, next) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 }
+
+export function requireUserId(req, res, next) {
+    const userId = req.user?.id;
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+}
+
 export default authenticationMiddleware;

@@ -1,0 +1,45 @@
+import express from 'express';
+import { urlSchema } from '../validation/request.validation.js';
+import { createShortUrl, getUserUrls } from '../services/url.service.js';
+import { requireUserId } from '../middlewares/auth.middleware.js';
+
+const router = express.Router();
+
+router.post('/shorten', requireUserId, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const urlValidation = await urlSchema.safeParseAsync(req.body);
+        if (!urlValidation.success) {
+            return res.status(400).json({ error: 'Invalid URL data', issues: urlValidation.error.issues });
+        }
+
+        const { originalUrl, shortCode } = urlValidation.data;
+
+        const newUrl = await createShortUrl({ originalUrl, shortCode, userId });
+
+        return res.status(201).json({
+            id: newUrl.id,
+            shortCode: newUrl.shortCode,
+            originalUrl: newUrl.originalUrl
+        });
+    } catch (error) {
+        console.error('Error shortening URL:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// get all urls for a user
+router.get('/', requireUserId, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const userUrls = await getUserUrls(userId);
+        return res.status(200).json({ data: userUrls });
+    } catch (error) {
+        console.error('Error fetching user URLs:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+export const urlRouter = router;
