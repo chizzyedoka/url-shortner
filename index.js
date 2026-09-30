@@ -4,6 +4,8 @@ import { userRouter } from './routes/user.routes.js';
 import { urlRouter } from './routes/url.routes.js';
 import { errorHandler } from './middlewares/errors.middleware.js';
 import { connectDB, disconnectDB, db } from './db/index.js';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerDocument } from './docs/swagger.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +35,11 @@ app.get('/health', async (req, res) => {
     });
   }
 });
+
+app.get('/api-docs.json', (req, res) => {
+  return res.json(swaggerDocument);
+});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/api/users', userRouter);
 app.use('/api/urls', urlRouter);
