@@ -11,10 +11,20 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d url_shortener"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  schema:
+    build: .
+    command: ["npm", "run", "db:push"]
+    restart: "no"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-admin}@db:5432/${POSTGRES_DB:-url_shortener}
+    depends_on:
+      db:
+        condition: service_healthy
 
   app:
     build: .
@@ -22,13 +32,13 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-admin}@db:5432/${POSTGRES_DB:-url_shortener}
       JWT_SECRET: ${JWT_SECRET}
-      PORT: 3000
+      PORT: ${PORT}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "3000:3000"
+      - "${PORT}:${PORT}"
     depends_on:
-      db:
-        condition: service_healthy
+      schema:
+        condition: service_completed_successfully
 
 volumes:
   db_data:
